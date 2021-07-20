@@ -7,26 +7,29 @@
  * and licensed under the Apache Public License (version 2)
  */
 
-#import "MMDrawerController.h"
+
 #import <Foundation/Foundation.h>
+#import "MMDrawerController.h"
 
 @interface NappDrawerVisualState : NSObject
 
-+ (MMDrawerControllerDrawerVisualStateBlock)slideAndScaleVisualStateBlock;
 
-+ (MMDrawerControllerDrawerVisualStateBlock)slideVisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)slideAndScaleVisualStateBlock;
 
-+ (MMDrawerControllerDrawerVisualStateBlock)swingingDoorVisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)slideVisualStateBlock;
+
++(MMDrawerControllerDrawerVisualStateBlock)swingingDoorVisualStateBlock;
 
 // parallax
-+ (MMDrawerControllerDrawerVisualStateBlock)parallax3VisualStateBlock;
-+ (MMDrawerControllerDrawerVisualStateBlock)parallax5VisualStateBlock;
-+ (MMDrawerControllerDrawerVisualStateBlock)parallax7VisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)parallax3VisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)parallax5VisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)parallax7VisualStateBlock;
 
 // fade
-+ (MMDrawerControllerDrawerVisualStateBlock)fadeVisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)fadeVisualStateBlock;
 
 // node
-+ (MMDrawerControllerDrawerVisualStateBlock)noneVisualStateBlock;
++(MMDrawerControllerDrawerVisualStateBlock)noneVisualStateBlock;
+
 
 @end
