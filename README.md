@@ -1,4 +1,4 @@
-# Napp Drawer Module [![gitTio](http://gitt.io/badge.svg)](http://gitt.io/component/dk.napp.drawer) [![NPM](https://img.shields.io/npm/v/ti-module-dk.napp.drawer.svg?style=flat-square)](https://www.npmjs.com/package/ti-module-dk.napp.drawer)
+# Titanium Napp Drawer Module [![gitTio](http://gitt.io/badge.svg)](http://gitt.io/component/dk.napp.drawer) [![NPM](https://img.shields.io/npm/v/ti-module-dk.napp.drawer.svg?style=flat-square)](https://www.npmjs.com/package/ti-module-dk.napp.drawer)
 
 <img src="./example-cross-platform.jpg" alt="Cross Platform Example (iOS / Android)" width="800" />
 
@@ -34,6 +34,8 @@ web: http://www.napp.dk
 email: mm@napp.dk  
 twitter: @nappdev  
 
+## Modified by
+Marc Bender
 
 ## License
 
