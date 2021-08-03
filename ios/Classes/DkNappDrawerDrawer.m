@@ -106,13 +106,24 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
     if (leftWindow != nil) {
 
+      BOOL leftIsNav = NO;
+      if ([[[leftWindow class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
+          leftIsNav = YES;
+      }
+
+      TiViewController *leftController = leftIsNav ? NavigationControllerForViewProxy(leftWindow) : ControllerForViewProxy(leftWindow);
+
       //both left and right
       if (rightWindow != nil) {
 
-        TiViewController *leftController = ControllerForViewProxy(leftWindow);
-        TiViewController *rightController = ControllerForViewProxy(rightWindow);
+        BOOL rightIsNav = NO;
+        if ([[[rightWindow class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
+            rightIsNav = YES;
+        }
 
-          TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
+        TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
+
+        TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
 
         TiThreadPerformOnMainThread(^{
           [centerProxy windowWillOpen];
@@ -126,9 +137,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
         //left only
       } else {
 
-        TiViewController *leftController = ControllerForViewProxy(leftWindow);
-
-          TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
+        TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
 
         TiThreadPerformOnMainThread(^{
           [centerProxy windowWillOpen];
@@ -142,9 +151,14 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       //right only
     } else if (rightWindow != nil) {
 
-      TiViewController *rightController = ControllerForViewProxy(rightWindow);
+      BOOL rightIsNav = NO;
+      if ([[[rightWindow class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
+          rightIsNav = YES;
+      }
 
-        TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
+      TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
+
+      TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
 
       TiThreadPerformOnMainThread(^{
         [centerProxy windowWillOpen];
