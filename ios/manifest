@@ -2,7 +2,7 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 2.2.2
+version: 2.2.4
 apiversion: 2
 architectures: x86_64 arm64
 description: Drawer controller
