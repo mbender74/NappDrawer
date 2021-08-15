@@ -2,14 +2,14 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 2.2.4
+version: 2.2.5
 apiversion: 2
 architectures: x86_64 arm64
 description: Drawer controller
 author: Mads Møller
 license: MIT
 copyright: Napp ApS
-
+# Mod version by Marc Bender (2021)
 # these should not be edited
 name: NappDrawer
 moduleid: dk.napp.drawer

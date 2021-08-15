@@ -10,6 +10,9 @@
 #import "DkNappDrawerDrawerProxy.h"
 #import "DkNappDrawerDrawer.h"
 #import "TiUtils.h"
+#import "TiUINavigationWindowProxy.h"
+#import "TiUtils.h"
+#import "TiViewController.h"
 
 @implementation DkNappDrawerDrawerProxy
 
@@ -110,6 +113,17 @@
 - (NSNumber *)isRightWindowOpen:(id)args
 {
   return [(DkNappDrawerDrawer *)[self view] isRightWindowOpen:args];
+}
+
+
+-(void)close:(id)args {
+    
+    TiThreadPerformOnMainThread(^{[(DkNappDrawerDrawer*)[self view] close:args];}, NO);
+    TiThreadPerformOnMainThread(
+        ^{
+            [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
+        },
+        NO);
 }
 
 @end

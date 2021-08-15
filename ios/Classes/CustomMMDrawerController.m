@@ -37,6 +37,7 @@
 - (void)setWindowAppearanceCallback:(void (^)(NSString *))callback
 {
   _callback = [callback copy];
+    
   __weak __typeof__(self) weakSelf = self;
 
   // add callback for the gestures

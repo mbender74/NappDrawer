@@ -13,6 +13,10 @@
 #import "TiUINavigationWindowProxy.h"
 #import "TiUtils.h"
 #import "TiViewController.h"
+#import "TiUINavigationWindowInternal.h"
+#import <TitaniumKit/TiApp.h>
+
+
 
 UIViewController *ControllerForViewProxy(TiViewProxy *proxy);
 
@@ -111,7 +115,10 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
           leftIsNav = YES;
       }
 
-      TiViewController *leftController = leftIsNav ? NavigationControllerForViewProxy(leftWindow) : ControllerForViewProxy(leftWindow);
+        UIViewController *leftController = leftIsNav ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"leftWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"leftWindow"]);
+
+        
+//      TiViewController *leftController = leftIsNav ? NavigationControllerForViewProxy(leftWindow) : ControllerForViewProxy(leftWindow);
 
       //both left and right
       if (rightWindow != nil) {
@@ -121,8 +128,11 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
             rightIsNav = YES;
         }
 
-        TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
+//        TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
 
+          UIViewController *rightController = rightIsNav ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]);
+          
+          
         TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
 
         TiThreadPerformOnMainThread(^{
@@ -156,8 +166,10 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
           rightIsNav = YES;
       }
 
-      TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
+//      TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
 
+        UIViewController *rightController = rightIsNav ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]);
+        
       TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
 
       TiThreadPerformOnMainThread(^{
@@ -257,7 +269,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     UINavigationBar *bar = navCon.navigationBar;
 
     [[UIApplication sharedApplication] setStatusBarHidden:NO];
-
+      
     bar.frame = CGRectMake(0, 0, self.controller.view.bounds.size.width, 64);
   }
 }
@@ -442,6 +454,10 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 }
 
 #pragma mark - API
+-(void)close:(id)args {
+    [controller closeDrawerAnimated:NO completion:^(BOOL finished) {
+    }];
+}
 
 - (void)toggleLeftWindow:(id)args
 {

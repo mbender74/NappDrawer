@@ -7,9 +7,10 @@
  * and licensed under the Apache Public License (version 2)
  */
 #import "MMDrawerController.h"
-#import "TiBase.h"
-#import "TiWindowProxy.h"
-
+#import <TitaniumKit/TiBase.h>
+#import <TitaniumKit/TiApp.h>
+#import <TitaniumKit/TiUtils.h>
+#import <TitaniumKit/TiWindowProxy.h>
 @interface DkNappDrawerDrawerProxy : TiWindowProxy {
 }
 
