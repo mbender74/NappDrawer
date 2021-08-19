@@ -186,7 +186,8 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       NSLog(@"[ERROR][DkNappDrawerDrawer] No windows assigned");
       return nil;
     }
-
+    
+      
     // SET PROPERTIES at init
     if ([self.proxy valueForUndefinedKey:@"openDrawerGestureMode"] != nil) {
       [self setOpenDrawerGestureMode_:[self.proxy valueForUndefinedKey:@"openDrawerGestureMode"]];
@@ -239,7 +240,9 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       if ([state isEqualToString:@"open"]) {
         [[strongSelf proxy] fireEvent:@"windowDidOpen"];
       } else if ([state isEqualToString:@"close"]) {
-        [[strongSelf proxy] fireEvent:@"windowDidClose"];
+          if ([TiUtils boolValue:[[strongSelf proxy] valueForUndefinedKey:@"autoCloseWindows"] def:YES]) {
+              [[strongSelf proxy] fireEvent:@"windowDidClose"];
+          }
       }
 
       [strongSelf _fireStateEventForCurrentState];
@@ -268,7 +271,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     UINavigationController *navCon = (UINavigationController *)self.controller.centerViewController;
     UINavigationBar *bar = navCon.navigationBar;
 
-    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+     // [navCon prefersStatusBarHidden];
       
     bar.frame = CGRectMake(0, 0, self.controller.view.bounds.size.width, 64);
   }
@@ -304,8 +307,10 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   // Cleanup
   if (useNavController) {
     if (navProxy != nil) {
-      [navProxy windowWillClose];
-      [navProxy windowDidClose];
+      if ([TiUtils boolValue:[[self proxy] valueForUndefinedKey:@"autoCloseWindows"] def:YES]) {
+          [navProxy windowWillClose];
+          [navProxy windowDidClose];
+      }
     }
     // Save new proxy
     navProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
@@ -413,10 +418,14 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   return nil;
 }
 
+
 - (void)setStatusBarStyle_:(NSNumber *)style
 {
-  ENSURE_UI_THREAD(setStatusBarStyle_, style);
-  [[UIApplication sharedApplication] setStatusBarStyle:[style intValue]];
+  ENSURE_UI_THREAD(setStatusBarStyle_, style);    
+    
+    controller.navigationController.navigationBar.barStyle = [style intValue];
+    
+//  [[UIApplication sharedApplication] setStatusBarStyle:[style intValue]];
 }
 
 - (void)setAnimationMode_:(id)args

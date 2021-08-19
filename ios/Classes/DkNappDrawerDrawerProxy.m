@@ -115,6 +115,18 @@
   return [(DkNappDrawerDrawer *)[self view] isRightWindowOpen:args];
 }
 
+- (NSNumber *)setBackGroundColor:(id)args
+{
+    [(DkNappDrawerDrawer *)[self view] setBackgroundColor:[[TiUtils colorValue:[self valueForUndefinedKey:@"backgroundColor"]] _color]];
+    //[[self _controller].view setBackgroundColor:[self view].backgroundColor];
+//    [self _controller].view.opaque = YES;
+//    [self _controller].view.layer.masksToBounds = true;
+//    self.view.opaque = YES;
+//    self.view.layer.masksToBounds = true;
+
+}
+
+
 
 -(void)close:(id)args {
     
@@ -122,6 +134,18 @@
     TiThreadPerformOnMainThread(
         ^{
             [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
+            
+            TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
+            TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
+            TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
+            [leftWinProxy windowDidClose];
+            [rightWinProxy windowDidClose];
+            [centerWinProxy windowDidClose];
+            
+            if ([self _hasListeners:@"close"]) {
+              [self  fireEvent:@"close"];
+            }
+            
         },
         NO);
 }
