@@ -238,11 +238,15 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       __typeof__(self) strongSelf = weakSelf;
 
       if ([state isEqualToString:@"open"]) {
+          
         [[strongSelf proxy] fireEvent:@"windowDidOpen"];
+          
+          
       } else if ([state isEqualToString:@"close"]) {
           if ([TiUtils boolValue:[[strongSelf proxy] valueForUndefinedKey:@"autoCloseWindows"] def:YES]) {
               [[strongSelf proxy] fireEvent:@"windowDidClose"];
           }
+ 
       }
 
       [strongSelf _fireStateEventForCurrentState];
@@ -462,11 +466,31 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   }
 }
 
+
+
 #pragma mark - API
--(void)close:(id)args {
-    [controller closeDrawerAnimated:NO completion:^(BOOL finished) {
-    }];
-}
+
+
+//-(KrollPromise *)close:(id)args {
+//
+//    if ([self.proxy _hasListeners:@"close"]) {
+//      [self.proxy  fireEvent:@"close"];
+//    }
+//
+//
+////    [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
+////
+////    TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
+////    TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
+////    TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
+////    [leftWinProxy windowDidClose];
+////    [rightWinProxy windowDidClose];
+////    [centerWinProxy windowDidClose];
+////
+////    [controller closeDrawerAnimated:NO completion:^(BOOL finished) {
+////    }];
+//
+//}
 
 - (void)toggleLeftWindow:(id)args
 {

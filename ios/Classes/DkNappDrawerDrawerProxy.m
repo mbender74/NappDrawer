@@ -10,9 +10,6 @@
 #import "DkNappDrawerDrawerProxy.h"
 #import "DkNappDrawerDrawer.h"
 #import "TiUtils.h"
-#import "TiUINavigationWindowProxy.h"
-#import "TiUtils.h"
-#import "TiViewController.h"
 
 @implementation DkNappDrawerDrawerProxy
 
@@ -24,6 +21,7 @@
 
 - (void)windowWillClose
 {
+
   TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
   TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
   TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
@@ -31,7 +29,7 @@
   [rightWinProxy windowWillClose];
   [centerWinProxy windowWillClose];
 
-  [super windowWillClose];
+ // [super windowWillClose];
 }
 
 - (void)windowDidClose
@@ -42,11 +40,23 @@
   [leftWinProxy windowDidClose];
   [rightWinProxy windowDidClose];
   [centerWinProxy windowDidClose];
+ // [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
 
-  [super windowDidClose];
+   
+
+
+    TiThreadPerformOnMainThread(^{
+        [self close:nil];
+            if ([self _hasListeners:@"close"]) {
+              [self fireEvent:@"close"];
+            }
+    },
+    YES);
+ // [super windowDidClose];
+    
 }
 
-- (MMDrawerController *)_controller
+- (CustomMMDrawerController *)_controller
 {
   return [(DkNappDrawerDrawer *)[self view] controller];
 }
@@ -127,27 +137,27 @@
 }
 
 
+//
+//-(KrollPromise *)close:(id)args {
+//    
+//        
+//        [(DkNappDrawerDrawer*)[self view] close:args];
+//        
+//
+//    
+//    
+//    
+//
+//    
+//    
+//}
 
--(void)close:(id)args {
-    
-    TiThreadPerformOnMainThread(^{[(DkNappDrawerDrawer*)[self view] close:args];}, NO);
-    TiThreadPerformOnMainThread(
-        ^{
-            [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
-            
-            TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
-            TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
-            TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
-            [leftWinProxy windowDidClose];
-            [rightWinProxy windowDidClose];
-            [centerWinProxy windowDidClose];
-            
-            if ([self _hasListeners:@"close"]) {
-              [self  fireEvent:@"close"];
-            }
-            
-        },
-        NO);
-}
+//-(void)close:(id)args {
+//    TiThreadPerformOnMainThread(^{
+//        [(DkNappDrawerDrawer*)[self view] close:args];
+//    },
+//        NO);
+//}
+//
 
 @end

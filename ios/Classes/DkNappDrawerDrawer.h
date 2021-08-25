@@ -15,7 +15,8 @@
 #import "TiBase.h"
 #import "TiUIView.h"
 #import "TiUINavigationWindowProxy.h"
-#import "TiWindowProxy.h"
+#import "TiUIWindowProxy.h"
+#import "TiUIWindow.h"
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -44,6 +45,6 @@
 - (NSNumber *)isAnyWindowOpen:(id)args;
 - (NSNumber *)isLeftWindowOpen:(id)args;
 - (NSNumber *)isRightWindowOpen:(id)args;
-- (void)close:(id)args;
+//- (KrollPromise *)close:(id)args;
 
 @end

@@ -11,7 +11,7 @@
 #import "TiHost.h"
 #import "TiUtils.h"
 
-#import "MMDrawerController.h"
+#import "CustomMMDrawerController.h"
 
 @implementation DkNappDrawerModule
 
