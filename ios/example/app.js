@@ -99,7 +99,7 @@ function openNewNavWindow() {
     scrollView.add(label);
   }
   win.add(scrollView);
-  var navController = Ti.UI.iOS.createNavigationWindow({
+  var navController = Ti.UI.createNavigationWindow({
     window: win
   });
   return navController;
@@ -226,7 +226,7 @@ function createCenterNavWindow() {
   win.add(label);
   win.add(slider);
 
-  var navController = Ti.UI.iOS.createNavigationWindow({
+  var navController = Ti.UI.createNavigationWindow({
     window: win
   });
   return navController;
