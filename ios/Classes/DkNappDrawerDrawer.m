@@ -252,10 +252,14 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       [strongSelf _fireStateEventForCurrentState];
     }];
 
+    [controller willMoveToParentViewController:TiApp.controller.topPresentedController];
+
     // set frame bounds & add it
     controllerView_ = [controller view];
     [controllerView_ setFrame:[self bounds]];
     [self addSubview:controllerView_];
+
+    [TiApp.controller.topPresentedController addChildViewController:controller];
 
     leftView_ = leftWindow.view;
     rightView_ = rightWindow.view;
