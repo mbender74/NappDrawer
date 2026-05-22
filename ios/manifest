@@ -2,17 +2,18 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 2.3.0
+version: 3.1.0
 apiversion: 2
-architectures: x86_64 arm64
-description: Drawer controller
-author: Mads Møller
-license: MIT
-copyright: Napp ApS
-# Mod version by Marc Bender (2021)
+architectures: arm64 x86_64
+mac: true
+description: NappDrawer
+author: Marc Bender
+license: Specify your license
+copyright: Copyright (c) 2026 by Your Company
+
 # these should not be edited
 name: NappDrawer
 moduleid: dk.napp.drawer
-guid: 2a446559-1d59-4808-aefc-7d02d3130ebb
+guid: fb6203e5-d7b9-48b8-9985-9619ea56d12e
 platform: iphone
-minsdk: 9.3.2.GA
+minsdk: 13.2.0.GA
