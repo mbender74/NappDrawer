@@ -77,13 +77,18 @@ MAKE_SYSTEM_PROP(STATUSBAR_ANIMATION_SLIDE, 2);
 
 #pragma Public APIs
 
+// G9: iOS 13+ Status Bar APIs — Verwende deprecated APIs mit Warning-Suppression
+// UIStatusBarManager.desiredStatusBarHidden/Style sind readonly, daher fallback auf UIApplication
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void)hideStatusBar:(id)args
 {
   ENSURE_SINGLE_ARG_OR_NIL(args, NSDictionary);
   ENSURE_UI_THREAD(hideStatusBar, args);
 
   int style = [TiUtils intValue:@"animationStyle" properties:args def:UIStatusBarAnimationSlide];
-  [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:style];
+  [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:(UIStatusBarAnimation)style];
 }
 
 - (void)showStatusBar:(id)args
@@ -92,13 +97,15 @@ MAKE_SYSTEM_PROP(STATUSBAR_ANIMATION_SLIDE, 2);
   ENSURE_UI_THREAD(showStatusBar, args);
 
   int style = [TiUtils intValue:@"animationStyle" properties:args def:UIStatusBarAnimationSlide];
-  [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:style];
+  [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:(UIStatusBarAnimation)style];
 }
 
 - (void)setStatusBarStyle:(NSNumber *)style
 {
   ENSURE_UI_THREAD(setStatusBarStyle, style);
-  [[UIApplication sharedApplication] setStatusBarStyle:[style intValue]];
+  [[UIApplication sharedApplication] setStatusBarStyle:(UIStatusBarStyle)[style intValue]];
 }
+
+#pragma clang diagnostic pop
 
 @end
