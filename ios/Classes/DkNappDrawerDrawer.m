@@ -53,23 +53,25 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   return controllerView_;
 }
 
+// G12: Thread-safe accessibleElements mit @synchronized
 - (NSArray *)accessibleElements
-
 {
-  if (_accessibleElements != nil) {
-    [_accessibleElements removeAllObjects];
-  } else {
-    _accessibleElements = [[NSMutableArray alloc] init];
-  }
+  @synchronized(self) {
+    if (_accessibleElements != nil) {
+      [_accessibleElements removeAllObjects];
+    } else {
+      _accessibleElements = [[NSMutableArray alloc] init];
+    }
 
-  if ([[self isLeftWindowOpen:nil] intValue]) {
-    [_accessibleElements addObject:leftView_];
-  } else if ([[self isRightWindowOpen:nil] intValue]) {
-    [_accessibleElements addObject:rightView_];
-  }
-  [_accessibleElements addObject:controllerView_];
+    if ([[self isLeftWindowOpen:nil] intValue]) {
+      [_accessibleElements addObject:leftView_];
+    } else if ([[self isRightWindowOpen:nil] intValue]) {
+      [_accessibleElements addObject:rightView_];
+    }
+    [_accessibleElements addObject:controllerView_];
 
-  return _accessibleElements;
+    return _accessibleElements;
+  }
 }
 
 /* The container itself is not accessible, so MultiFacetedView should return NO in isAccessiblityElement. */
@@ -271,15 +273,17 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   return controller;
 }
 
+// G10: Moderner Orientation Handler — nutzt performWithoutAnimation für Frame-Updates
 - (void)orientationDidChange:(NSNotification *)note
 {
   if ([self.controller.centerViewController isKindOfClass:[UINavigationController class]]) {
     UINavigationController *navCon = (UINavigationController *)self.controller.centerViewController;
     UINavigationBar *bar = navCon.navigationBar;
 
-     // [navCon prefersStatusBarHidden];
-      
-    bar.frame = CGRectMake(0, 0, self.controller.view.bounds.size.width, 64);
+    // Frame-Update ohne Animation um Konflikte mit Auto Layout zu vermeiden
+    [UIView performWithoutAnimation:^{
+      bar.frame = CGRectMake(0, 0, self.controller.view.bounds.size.width, 64);
+    }];
   }
 }
 
