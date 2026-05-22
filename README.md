@@ -21,17 +21,7 @@ The **Napp Drawer** module extends the Appcelerator Titanium Mobile framework wi
 
 ### Installation
 
-**Option 1: gitTio (Recommended)**
-```bash
-$ gittio install dk.napp.drawer
-```
-
-**Option 2: NPM**
-```bash
-$ npm i --save ti-module-dk.napp.drawer
-```
-
-**Option 3: Manual**
+**Manual Installation**
 Download the latest ZIP from [gitt.io/dk.napp.drawer](http://gitt.io/component/dk.napp.drawer) and follow the [Titanium Module Installation Guide](http://docs.appcelerator.com/titanium/latest/#!/guide/Using_a_Module).
 
 ### Basic Usage
