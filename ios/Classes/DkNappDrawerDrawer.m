@@ -98,10 +98,11 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
 #pragma mark - Init
 
+// G1: dispatch_once für thread-sichere lazy init
 - (MMDrawerController *)controller
 {
-  if (controller == nil) {
-
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
     // G2: isKindOfClass: statt String-Vergleich (TiUINavigationWindowProxy)
     TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
     BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
@@ -183,7 +184,6 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       //error
     } else {
       NSLog(@"[ERROR][DkNappDrawerDrawer] No windows assigned");
-      return nil;
     }
 
     // G11: Block mit weak-self Referenz, callback wird auf nil gesetzt wenn Drawer schliesst
@@ -269,7 +269,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
                                              selector:@selector(orientationDidChange:)
                                                  name:UIApplicationDidChangeStatusBarOrientationNotification
                                                object:nil];
-  }
+  }); // end dispatch_once
   return controller;
 }
 

@@ -23,6 +23,7 @@
 @interface DkNappDrawerDrawer : TiUIView {
   @private
   CustomMMDrawerController *controller;
+    // C1: navProxy mit nil initialisiert
     TiUINavigationWindowProxy *navProxy;
 
   NSMutableArray *_accessibleElements;
