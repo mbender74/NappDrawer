@@ -293,6 +293,18 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   [super frameSizeChanged:frame bounds:bounds];
 }
 
+// G11: Cleanup beim Destroy — Callback und Notification Observer aufräumen
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                   name:UIApplicationDidChangeStatusBarOrientationNotification
+                                                 object:nil];
+
+  if (controller) {
+    [controller clearWindowAppearanceCallback];
+  }
+}
+
 #pragma mark - Properties
 
 - (void)setCenterWindow_:(id)args

@@ -52,23 +52,11 @@
   }];
 }
 
-
-
-//-(void)setWindowAppearanceCallback:(void(^)(NSString*))callback
-// {
-//     _callback = [callback copy];
-//
-//     // add callback for the gestures
-//     [super setGestureCompletionBlock:^(MMDrawerController *controller, UIGestureRecognizer *gesture) {
-//         if(controller.openSide == MMDrawerSideNone){
-//             self->_callback(@"close");
-//         } else {
-//             self->_callback(@"open");
-//         }
-//     }];
-// }
-
-
-
+// G11: Callback aufräumen um retain cycles zu vermeiden
+- (void)clearWindowAppearanceCallback
+{
+  _callback = nil;
+  [super setGestureCompletionBlock:nil];
+}
 
 @end

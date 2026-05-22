@@ -18,5 +18,7 @@ typedef void (^WindowAppearanceChangeBlock)(NSString *state);
 }
 
 - (void)setWindowAppearanceCallback:(void (^)(NSString *))callback;
+// G11: Callback beim Close aufräumen (retain cycle vermeiden)
+- (void)clearWindowAppearanceCallback;
 
 @end
