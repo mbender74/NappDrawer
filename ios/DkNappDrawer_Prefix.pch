@@ -1,4 +1,10 @@
 
 #ifdef __OBJC__
     #import <Foundation/Foundation.h>
+    #import <UIKit/UIKit.h>
+#endif
+
+// G16: Availability-Defines für moderne iOS-Entwicklung
+#ifndef NS_DESIGNATED_INITIALIZER
+#define NS_DESIGNATED_INITIALIZER
 #endif

@@ -9,7 +9,5 @@
 #import "CustomMMDrawerController.h"
 #import <TitaniumKit/TiBase.h>
 #import <TitaniumKit/TiUIWindowProxy.h>
-@interface DkNappDrawerDrawerProxy : TiUIWindowProxy {
-}
-
+@interface DkNappDrawerDrawerProxy : TiUIWindowProxy
 @end

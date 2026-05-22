@@ -25,12 +25,17 @@ UIViewController *ControllerForViewProxy(TiViewProxy *proxy)
   [[proxy view] setAutoresizingMask:UIViewAutoresizingNone];
 
   //make the proper resize !
-  TiThreadPerformOnMainThread(^{
+  if ([NSThread isMainThread]) {
     [proxy windowWillOpen];
     [proxy reposition];
     [proxy windowDidOpen];
-  },
-      YES);
+  } else {
+    TiThreadPerformOnMainThread(^{
+      [proxy windowWillOpen];
+      [proxy reposition];
+      [proxy windowDidOpen];
+    }, NO);
+  }
   return [[TiViewController alloc] initWithViewProxy:proxy];
 }
 
@@ -95,14 +100,12 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 {
   if (controller == nil) {
 
-    // Check in centerWindow is a UINavigationController
-    BOOL useNavController = NO;
-    if ([[[[self.proxy valueForUndefinedKey:@"centerWindow"] class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
-      useNavController = YES;
-    }
+    // G2: isKindOfClass: statt String-Vergleich (TiUINavigationWindowProxy)
+    TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
+    BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
 
     // navController or TiWindow ?
-    UIViewController *centerWindow = useNavController ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"centerWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"centerWindow"]);
+    UIViewController *centerWindow = useNavController ? NavigationControllerForViewProxy(centerProxy) : ControllerForViewProxy(centerProxy);
 
     TiViewProxy *leftWindow = [self.proxy valueForUndefinedKey:@"leftWindow"];
     TiViewProxy *rightWindow = [self.proxy valueForUndefinedKey:@"rightWindow"];
@@ -110,36 +113,30 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
     if (leftWindow != nil) {
 
-      BOOL leftIsNav = NO;
-      if ([[[leftWindow class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
-          leftIsNav = YES;
-      }
-
-        UIViewController *leftController = leftIsNav ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"leftWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"leftWindow"]);
-
-        
-//      TiViewController *leftController = leftIsNav ? NavigationControllerForViewProxy(leftWindow) : ControllerForViewProxy(leftWindow);
+      BOOL leftIsNav = [leftWindow isKindOfClass:[TiUINavigationWindowProxy class]];
+      UIViewController *leftController = leftIsNav
+        ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)leftWindow)
+        : ControllerForViewProxy(leftWindow);
 
       //both left and right
       if (rightWindow != nil) {
 
-        BOOL rightIsNav = NO;
-        if ([[[rightWindow class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
-            rightIsNav = YES;
-        }
+        BOOL rightIsNav = [rightWindow isKindOfClass:[TiUINavigationWindowProxy class]];
+        UIViewController *rightController = rightIsNav
+          ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)rightWindow)
+          : ControllerForViewProxy(rightWindow);
 
-//        TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
-
-          UIViewController *rightController = rightIsNav ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]);
-          
-          
-        TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
-
-        TiThreadPerformOnMainThread(^{
+        // G4: TiThreadPerformOnMainThread mit NO + isMainThread Check (deadlock vermeiden)
+        // G13: windowWillOpen nur einmal feuern (nicht hier + nicht in ControllerForViewProxy)
+        if (![NSThread isMainThread]) {
+          TiThreadPerformOnMainThread(^{
+            [centerProxy windowWillOpen];
+            [centerProxy windowDidOpen];
+          }, NO);
+        } else {
           [centerProxy windowWillOpen];
           [centerProxy windowDidOpen];
-        },
-            YES);
+        }
 
         controller = [[CustomMMDrawerController alloc] initWithCenterViewController:centerWindow
                                                            leftDrawerViewController:leftController
@@ -147,13 +144,15 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
         //left only
       } else {
 
-        TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
-
-        TiThreadPerformOnMainThread(^{
+        if (![NSThread isMainThread]) {
+          TiThreadPerformOnMainThread(^{
+            [centerProxy windowWillOpen];
+            [centerProxy windowDidOpen];
+          }, NO);
+        } else {
           [centerProxy windowWillOpen];
           [centerProxy windowDidOpen];
-        },
-            YES);
+        }
 
         controller = [[CustomMMDrawerController alloc] initWithCenterViewController:centerWindow
                                                            leftDrawerViewController:leftController];
@@ -161,22 +160,20 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       //right only
     } else if (rightWindow != nil) {
 
-      BOOL rightIsNav = NO;
-      if ([[[rightWindow class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
-          rightIsNav = YES;
-      }
+      BOOL rightIsNav = [rightWindow isKindOfClass:[TiUINavigationWindowProxy class]];
+      UIViewController *rightController = rightIsNav
+        ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)rightWindow)
+        : ControllerForViewProxy(rightWindow);
 
-//      TiViewController *rightController = rightIsNav ? NavigationControllerForViewProxy(rightWindow) : ControllerForViewProxy(rightWindow);
-
-        UIViewController *rightController = rightIsNav ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"rightWindow"]);
-        
-      TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
-
-      TiThreadPerformOnMainThread(^{
+      if (![NSThread isMainThread]) {
+        TiThreadPerformOnMainThread(^{
+          [centerProxy windowWillOpen];
+          [centerProxy windowDidOpen];
+        }, NO);
+      } else {
         [centerProxy windowWillOpen];
         [centerProxy windowDidOpen];
-      },
-          YES);
+      }
 
       controller = [[CustomMMDrawerController alloc] initWithCenterViewController:centerWindow
                                                         rightDrawerViewController:rightController];
@@ -186,8 +183,26 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       NSLog(@"[ERROR][DkNappDrawerDrawer] No windows assigned");
       return nil;
     }
-    
-      
+
+    // G11: Block mit weak-self Referenz, callback wird auf nil gesetzt wenn Drawer schliesst
+    [controller setWindowAppearanceCallback:^(NSString *state) {
+      __typeof__(self) strongSelf = weakSelf;
+
+      if (!strongSelf) {
+        return;
+      }
+
+      if ([state isEqualToString:@"open"]) {
+        [[strongSelf proxy] fireEvent:@"windowDidOpen"];
+      } else if ([state isEqualToString:@"close"]) {
+        if ([TiUtils boolValue:[[strongSelf proxy] valueForUndefinedKey:@"autoCloseWindows"] def:YES]) {
+          [[strongSelf proxy] fireEvent:@"windowDidClose"];
+        }
+      }
+
+      [strongSelf _fireStateEventForCurrentState];
+    }];
+
     // SET PROPERTIES at init
     if ([self.proxy valueForUndefinedKey:@"openDrawerGestureMode"] != nil) {
       [self setOpenDrawerGestureMode_:[self.proxy valueForUndefinedKey:@"openDrawerGestureMode"]];
@@ -233,25 +248,6 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       [self setStatusBarStyle_:[self.proxy valueForUndefinedKey:@"statusBarStyle"]];
     }
 
-    // open/close window
-    [controller setWindowAppearanceCallback:^(NSString *state) {
-      __typeof__(self) strongSelf = weakSelf;
-
-      if ([state isEqualToString:@"open"]) {
-          
-        [[strongSelf proxy] fireEvent:@"windowDidOpen"];
-          
-          
-      } else if ([state isEqualToString:@"close"]) {
-          if ([TiUtils boolValue:[[strongSelf proxy] valueForUndefinedKey:@"autoCloseWindows"] def:YES]) {
-              [[strongSelf proxy] fireEvent:@"windowDidClose"];
-          }
- 
-      }
-
-      [strongSelf _fireStateEventForCurrentState];
-    }];
-
     [controller willMoveToParentViewController:TiApp.controller.topPresentedController];
 
     // set frame bounds & add it
@@ -260,6 +256,8 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     [self addSubview:controllerView_];
 
     [TiApp.controller.topPresentedController addChildViewController:controller];
+    // G3: didMoveToParentViewController: nach addChildViewController:
+    [controller didMoveToParentViewController:TiApp.controller.topPresentedController];
 
     leftView_ = leftWindow.view;
     rightView_ = rightWindow.view;
@@ -296,15 +294,21 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 - (void)setCenterWindow_:(id)args
 {
   ENSURE_UI_THREAD(setCenterWindow_, args);
-  BOOL useNavController = NO;
-  if ([[[args class] description] isEqualToString:@"TiUINavigationWindowProxy"]) {
-    useNavController = YES;
-  }
-  UIViewController *centerWindow = useNavController ? NavigationControllerForViewProxy([self.proxy valueForUndefinedKey:@"centerWindow"]) : ControllerForViewProxy([self.proxy valueForUndefinedKey:@"centerWindow"]);
-  if (useNavController) {
-      TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
 
-    if (controller != nil) {
+  // G2: isKindOfClass: statt String-Vergleich
+  TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
+  BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
+  UIViewController *centerWindow = useNavController
+    ? NavigationControllerForViewProxy(centerProxy)
+    : ControllerForViewProxy(centerProxy);
+
+  if (useNavController && controller != nil) {
+    if (![NSThread isMainThread]) {
+      TiThreadPerformOnMainThread(^{
+        [centerProxy windowWillOpen];
+        [centerProxy windowDidOpen];
+      }, NO);
+    } else {
       [centerProxy windowWillOpen];
       [centerProxy windowDidOpen];
     }
@@ -316,12 +320,12 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   if (useNavController) {
     if (navProxy != nil) {
       if ([TiUtils boolValue:[[self proxy] valueForUndefinedKey:@"autoCloseWindows"] def:YES]) {
-          [navProxy windowWillClose];
-          [navProxy windowDidClose];
+        [navProxy windowWillClose];
+        [navProxy windowDidClose];
       }
     }
     // Save new proxy
-    navProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
+    navProxy = centerProxy;
   }
 }
 
@@ -464,6 +468,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     break;
   case 100:
     [controller setDrawerVisualStateBlock:[NappDrawerVisualState noneVisualStateBlock]];
+    break;
   default:
     [controller setDrawerVisualStateBlock:[NappDrawerVisualState noneVisualStateBlock]];
     break;

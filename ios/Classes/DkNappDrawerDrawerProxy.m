@@ -61,7 +61,7 @@
   return [(DkNappDrawerDrawer *)[self view] controller];
 }
 
-- (TiUIView *)newView
+- (instancetype)newView
 {
   return [[DkNappDrawerDrawer alloc] init];
 }
@@ -125,7 +125,7 @@
   return [(DkNappDrawerDrawer *)[self view] isRightWindowOpen:args];
 }
 
-- (NSNumber *)setBackGroundColor:(id)args
+- (void)setBackGroundColor:(id)args
 {
     [(DkNappDrawerDrawer *)[self view] setBackgroundColor:[[TiUtils colorValue:[self valueForUndefinedKey:@"backgroundColor"]] _color]];
     //[[self _controller].view setBackgroundColor:[self view].backgroundColor];

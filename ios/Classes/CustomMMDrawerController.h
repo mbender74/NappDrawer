@@ -11,10 +11,10 @@
 
 #import "MMDrawerController.h"
 
-typedef void windowAppearanceChange;
+typedef void (^WindowAppearanceChangeBlock)(NSString *state);
 
 @interface CustomMMDrawerController : MMDrawerController {
-  void (^_callback)(NSString *state);
+  WindowAppearanceChangeBlock _callback;
 }
 
 - (void)setWindowAppearanceCallback:(void (^)(NSString *))callback;
