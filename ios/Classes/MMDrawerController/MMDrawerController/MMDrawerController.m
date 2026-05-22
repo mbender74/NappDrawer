@@ -52,7 +52,12 @@ CGFloat const MMDrawerOvershootPercentage = 0.1f;
 typedef BOOL (^MMDrawerGestureShouldRecognizeTouchBlock)(MMDrawerController * drawerController, UIGestureRecognizer * gesture, UITouch * touch);
 typedef void (^MMDrawerGestureCompletionBlock)(MMDrawerController * drawerController, UIGestureRecognizer * gesture);
 
+// F2: Bounce-Faktoren — hardcodiert aber gut getestet, erzeugen ein natürliches Oszillieren
 static CAKeyframeAnimation * bounceKeyFrameAnimationForDistanceOnView(CGFloat distance, UIView * view) {
+	// 32 Keyframe-Faktoren (0-128) für 3 Bounce-Phasen:
+	// Phase 1 (0-15): Erster Bounce über das Ziel hinaus (128% = Maximum)
+	// Phase 2 (16-24): Zweiter Bounce zurück (64% = Halbierung)
+	// Phase 3 (25-31): Dritter Bounce ausklingen (32% → 0)
 	CGFloat factors[32] = {0, 32, 60, 83, 100, 114, 124, 128, 128, 124, 114, 100, 83, 60, 32,
 		0, 24, 42, 54, 62, 64, 62, 54, 42, 24, 0, 18, 28, 32, 28, 18, 0};
     
