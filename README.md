@@ -19,11 +19,6 @@ The **Napp Drawer** module extends the Appcelerator Titanium Mobile framework wi
 
 ## Quick Start
 
-### Installation
-
-**Manual Installation**
-Download the latest ZIP from [gitt.io/dk.napp.drawer](http://gitt.io/component/dk.napp.drawer) and follow the [Titanium Module Installation Guide](http://docs.appcelerator.com/titanium/latest/#!/guide/Using_a_Module).
-
 ### Basic Usage
 
 ```javascript
