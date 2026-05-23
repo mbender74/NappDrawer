@@ -293,9 +293,20 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   [super frameSizeChanged:frame bounds:bounds];
 }
 
-// G11: Cleanup beim Destroy — Callback und Notification Observer aufräumen
+// G11: Cleanup beim Destroy — Callback, Notification Observer und TiViewController aus Parent entfernen
 - (void)dealloc
 {
+  // FIX: TiViewController aus Parent entfernen (verhindert Blank Screen bei Wiederverwendung der TabGroup)
+  // controller ist CustomMMDrawerController, centerViewController ist der TiViewController
+  if (controller.centerViewController) {
+    UIViewController *centerVC = controller.centerViewController;
+    if ([centerVC respondsToSelector:@selector(parentViewController)]) {
+      if (centerVC.parentViewController) {
+        [centerVC removeFromParentViewController];
+      }
+    }
+  }
+
   [[NSNotificationCenter defaultCenter] removeObserver:self
                                                    name:UIApplicationDidChangeStatusBarOrientationNotification
                                                  object:nil];
