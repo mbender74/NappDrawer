@@ -293,16 +293,38 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
   [super frameSizeChanged:frame bounds:bounds];
 }
 
-// G11: Cleanup beim Destroy — Callback, Notification Observer und TiViewController aus Parent entfernen
+// G11: Cleanup beim Destroy — Callback, Notification Observer und TiViewControllers aus Parent entfernen
 - (void)dealloc
 {
-  // FIX: TiViewController aus Parent entfernen (verhindert Blank Screen bei Wiederverwendung der TabGroup)
+  // FIX: TiViewControllers aus Parent entfernen (verhindert Blank Screen bei Wiederverwendung)
   // controller ist CustomMMDrawerController, centerViewController ist der TiViewController
+
+  // centerViewController
   if (controller.centerViewController) {
     UIViewController *centerVC = controller.centerViewController;
     if ([centerVC respondsToSelector:@selector(parentViewController)]) {
       if (centerVC.parentViewController) {
         [centerVC removeFromParentViewController];
+      }
+    }
+  }
+
+  // leftDrawerViewController
+  if (controller.leftDrawerViewController) {
+    UIViewController *leftVC = controller.leftDrawerViewController;
+    if ([leftVC respondsToSelector:@selector(parentViewController)]) {
+      if (leftVC.parentViewController) {
+        [leftVC removeFromParentViewController];
+      }
+    }
+  }
+
+  // rightDrawerViewController
+  if (controller.rightDrawerViewController) {
+    UIViewController *rightVC = controller.rightDrawerViewController;
+    if ([rightVC respondsToSelector:@selector(parentViewController)]) {
+      if (rightVC.parentViewController) {
+        [rightVC removeFromParentViewController];
       }
     }
   }
