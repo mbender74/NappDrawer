@@ -65,7 +65,10 @@
   CustomMMDrawerController *ctrl = drawerView ? drawerView.controller : nil;
 
   TiThreadPerformOnMainThread(^{
-    [self close:nil];
+    // Only call close: if not already closing (avoids "Window is already closing" warning)
+    if (!closing) {
+      [self close:nil];
+    }
 
     // Remove the CustomMMDrawerController from parent hierarchy
     if (ctrl && ctrl.parentViewController) {
