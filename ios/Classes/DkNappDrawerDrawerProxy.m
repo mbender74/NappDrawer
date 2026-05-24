@@ -10,26 +10,39 @@
 #import "DkNappDrawerDrawerProxy.h"
 #import "DkNappDrawerDrawer.h"
 #import "TiUtils.h"
+#import <TitaniumKit/TiApp.h>
 
 @implementation DkNappDrawerDrawerProxy
 
 - (void)windowDidOpen
 {
+  DkNappDrawerDrawer *drawerView = (DkNappDrawerDrawer *)[self view];
+  if (drawerView) {
+    CustomMMDrawerController *ctrl = drawerView.controller;
+    if (ctrl && ![ctrl.view.superview isKindOfClass:[DkNappDrawerDrawer class]]) {
+      [ctrl.view removeFromSuperview];
+      [drawerView addSubview:ctrl.view];
+    }
+  }
   [super windowDidOpen];
   [self reposition];
 }
 
 - (void)windowWillClose
 {
-
   TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
   TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
   TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
-  [leftWinProxy windowWillClose];
-  [rightWinProxy windowWillClose];
-  [centerWinProxy windowWillClose];
 
- // [super windowWillClose];
+  if (leftWinProxy) {
+    [leftWinProxy windowWillClose];
+  }
+  if (rightWinProxy) {
+    [rightWinProxy windowWillClose];
+  }
+  if (centerWinProxy) {
+    [centerWinProxy windowWillClose];
+  }
 }
 
 - (void)windowDidClose
@@ -37,46 +50,57 @@
   TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
   TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
   TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
-  [leftWinProxy windowDidClose];
-  [rightWinProxy windowDidClose];
-  [centerWinProxy windowDidClose];
+  DkNappDrawerDrawer *drawerView = (DkNappDrawerDrawer *)[self view];
 
-    DkNappDrawerDrawer *drawerView = (DkNappDrawerDrawer *)[self view];
-    CustomMMDrawerController *ctrl = drawerView.controller;
+  // Call child windowDidClose first (detaches their views)
+  if (leftWinProxy) {
+    [leftWinProxy windowDidClose];
+  }
+  if (rightWinProxy) {
+    [rightWinProxy windowDidClose];
+  }
+  if (centerWinProxy) {
+    [centerWinProxy windowDidClose];
+  }
+  CustomMMDrawerController *ctrl = drawerView ? drawerView.controller : nil;
 
+  TiThreadPerformOnMainThread(^{
+    [self close:nil];
 
-    TiThreadPerformOnMainThread(^{
-        [self close:nil];
+    // Remove the CustomMMDrawerController from parent hierarchy
+    if (ctrl && ctrl.parentViewController) {
+      [ctrl willMoveToParentViewController:nil];
+      [ctrl removeFromParentViewController];
 
-        // FIX: Remove the CustomMMDrawerController from parent hierarchy to prevent blank screen on reopen
-        if (ctrl && ctrl.parentViewController) {
-            [ctrl willMoveToParentViewController:nil];
-            [ctrl removeFromParentViewController];
-        }
+      if ([ctrl.view.superview isKindOfClass:[DkNappDrawerDrawer class]]) {
+        [ctrl.view removeFromSuperview];
+      }
+    }
 
-        // Also remove child TiViewControllers (center, left, right) from parent
-        if (ctrl.centerViewController && ctrl.centerViewController.parentViewController) {
-            [ctrl.centerViewController willMoveToParentViewController:nil];
-            [ctrl.centerViewController removeFromParentViewController];
-        }
-        if (ctrl.leftDrawerViewController && ctrl.leftDrawerViewController.parentViewController) {
-            [ctrl.leftDrawerViewController willMoveToParentViewController:nil];
-            [ctrl.leftDrawerViewController removeFromParentViewController];
-        }
-        if (ctrl.rightDrawerViewController && ctrl.rightDrawerViewController.parentViewController) {
-            [ctrl.rightDrawerViewController willMoveToParentViewController:nil];
-            [ctrl.rightDrawerViewController removeFromParentViewController];
-        }
+    // Remove child TiViewControllers from parent
+    if (ctrl.centerViewController && ctrl.centerViewController.parentViewController) {
+      [ctrl.centerViewController willMoveToParentViewController:nil];
+      [ctrl.centerViewController removeFromParentViewController];
+    }
+    if (ctrl.leftDrawerViewController && ctrl.leftDrawerViewController.parentViewController) {
+      [ctrl.leftDrawerViewController willMoveToParentViewController:nil];
+      [ctrl.leftDrawerViewController removeFromParentViewController];
+    }
+    if (ctrl.rightDrawerViewController && ctrl.rightDrawerViewController.parentViewController) {
+      [ctrl.rightDrawerViewController willMoveToParentViewController:nil];
+      [ctrl.rightDrawerViewController removeFromParentViewController];
+    }
 
-        // Remove the drawer view itself from superview
-        [drawerView removeFromSuperview];
+    // Remove the drawer view itself from superview
+    if (drawerView.superview) {
+      [drawerView removeFromSuperview];
+    }
 
-        if ([self _hasListeners:@"close"]) {
-          [self fireEvent:@"close"];
-        }
-    },
-    YES);
-
+    if ([self _hasListeners:@"close"]) {
+      [self fireEvent:@"close"];
+    }
+  },
+  YES);
 }
 
 - (CustomMMDrawerController *)_controller
@@ -99,7 +123,33 @@
   return nil;
 }
 
+// G10: Moderner Orientation Handler — viewWillTransitionToSize statt deprecated Notification
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
+{
+  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+  DkNappDrawerDrawer *drawerView = (DkNappDrawerDrawer *)[self view];
+  if (drawerView) {
+    CustomMMDrawerController *ctrl = drawerView.controller;
+    if (ctrl && [ctrl.centerViewController isKindOfClass:[UINavigationController class]]) {
+      UINavigationController *navCon = (UINavigationController *)ctrl.centerViewController;
+      UINavigationBar *bar = navCon.navigationBar;
+      CGFloat barHeight = bar.bounds.size.height;
+      [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        bar.frame = CGRectMake(0, 0, size.width, barHeight);
+      } completion:nil];
+    }
+  }
+}
+
 #pragma API
+
+- (void)setStatusBarStyle_:(NSNumber *)style
+{
+  ENSURE_UI_THREAD(setStatusBarStyle_, style);
+  // barStyle ist ein @protected ivar von TiWindowProxy, direkt zugreifbar in Unterklassen
+  barStyle = (UIStatusBarStyle)[style intValue];
+  [[TiApp controller] performSelectorOnMainThread:@selector(updateStatusBar) withObject:nil waitUntilDone:NO];
+}
 
 - (void)toggleLeftWindow:(id)args
 {
@@ -150,37 +200,7 @@
 
 - (void)setBackGroundColor:(id)args
 {
-    [(DkNappDrawerDrawer *)[self view] setBackgroundColor:[[TiUtils colorValue:[self valueForUndefinedKey:@"backgroundColor"]] _color]];
-    //[[self _controller].view setBackgroundColor:[self view].backgroundColor];
-//    [self _controller].view.opaque = YES;
-//    [self _controller].view.layer.masksToBounds = true;
-//    self.view.opaque = YES;
-//    self.view.layer.masksToBounds = true;
-
+  [(DkNappDrawerDrawer *)[self view] setBackgroundColor:[[TiUtils colorValue:[self valueForUndefinedKey:@"backgroundColor"]] _color]];
 }
-
-
-//
-//-(KrollPromise *)close:(id)args {
-//    
-//        
-//        [(DkNappDrawerDrawer*)[self view] close:args];
-//        
-//
-//    
-//    
-//    
-//
-//    
-//    
-//}
-
-//-(void)close:(id)args {
-//    TiThreadPerformOnMainThread(^{
-//        [(DkNappDrawerDrawer*)[self view] close:args];
-//    },
-//        NO);
-//}
-//
 
 @end

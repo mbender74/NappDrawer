@@ -105,7 +105,6 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     if (controller != nil) {
       return controller;
     }
-    NSLog(@"[NappDrawer] controller lazy init START — self: %p", self);
     // G2: isKindOfClass: statt String-Vergleich (TiUINavigationWindowProxy)
     TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
     BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
@@ -132,16 +131,18 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
           ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)rightWindow)
           : ControllerForViewProxy(rightWindow);
 
-        // G4: TiThreadPerformOnMainThread mit NO + isMainThread Check (deadlock vermeiden)
-        // G13: windowWillOpen nur einmal feuern (nicht hier + nicht in ControllerForViewProxy)
-        if (![NSThread isMainThread]) {
-          TiThreadPerformOnMainThread(^{
+        // G13: windowWillOpen/windowDidOpen nur für NavigationWindow feuern
+        // (ControllerForViewProxy feuert sie bereits für reguläre Windows)
+        if (useNavController) {
+          if (![NSThread isMainThread]) {
+            TiThreadPerformOnMainThread(^{
+              [centerProxy windowWillOpen];
+              [centerProxy windowDidOpen];
+            }, NO);
+          } else {
             [centerProxy windowWillOpen];
             [centerProxy windowDidOpen];
-          }, NO);
-        } else {
-          [centerProxy windowWillOpen];
-          [centerProxy windowDidOpen];
+          }
         }
 
         controller = [[CustomMMDrawerController alloc] initWithCenterViewController:centerWindow
@@ -150,14 +151,16 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
         //left only
       } else {
 
-        if (![NSThread isMainThread]) {
-          TiThreadPerformOnMainThread(^{
+        if (useNavController) {
+          if (![NSThread isMainThread]) {
+            TiThreadPerformOnMainThread(^{
+              [centerProxy windowWillOpen];
+              [centerProxy windowDidOpen];
+            }, NO);
+          } else {
             [centerProxy windowWillOpen];
             [centerProxy windowDidOpen];
-          }, NO);
-        } else {
-          [centerProxy windowWillOpen];
-          [centerProxy windowDidOpen];
+          }
         }
 
         controller = [[CustomMMDrawerController alloc] initWithCenterViewController:centerWindow
@@ -171,14 +174,16 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
         ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)rightWindow)
         : ControllerForViewProxy(rightWindow);
 
-      if (![NSThread isMainThread]) {
-        TiThreadPerformOnMainThread(^{
+      if (useNavController) {
+        if (![NSThread isMainThread]) {
+          TiThreadPerformOnMainThread(^{
+            [centerProxy windowWillOpen];
+            [centerProxy windowDidOpen];
+          }, NO);
+        } else {
           [centerProxy windowWillOpen];
           [centerProxy windowDidOpen];
-        }, NO);
-      } else {
-        [centerProxy windowWillOpen];
-        [centerProxy windowDidOpen];
+        }
       }
 
       controller = [[CustomMMDrawerController alloc] initWithCenterViewController:centerWindow
@@ -254,17 +259,12 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     }
 
     UIViewController *topCtrl = TiApp.controller.topPresentedController;
-    NSLog(@"[NappDrawer] Adding controller to topPresentedController: %@ (%p)", NSStringFromClass([topCtrl class]), topCtrl);
 
     [controller willMoveToParentViewController:topCtrl];
 
     // set frame bounds & add it
     controllerView_ = [controller view];
     [controllerView_ setFrame:[self bounds]];
-    NSLog(@"[NappDrawer] Adding drawerView to self (%p), superview: %@", self, self.superview ? NSStringFromClass([self.superview class]) : @"nil");
-
-    // Check if self is already in a window
-    NSLog(@"[NappDrawer] self.window: %@ (frame: %@)", self.window ? @"YES" : @"NO", NSStringFromCGRect(self.frame));
 
     [self addSubview:controllerView_];
 
@@ -272,32 +272,11 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     // G3: didMoveToParentViewController: nach addChildViewController:
     [controller didMoveToParentViewController:topCtrl];
 
-    NSLog(@"[NappDrawer] Controller added. Parent now has %lu children", (unsigned long)topCtrl.childViewControllers.count);
-
     leftView_ = leftWindow.view;
     rightView_ = rightWindow.view;
     centerView_ = centerWindow.view;
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(orientationDidChange:)
-                                                 name:UIApplicationDidChangeStatusBarOrientationNotification
-                                               object:nil];
   } // end @synchronized
   return controller;
-}
-
-// G10: Moderner Orientation Handler — nutzt performWithoutAnimation für Frame-Updates
-- (void)orientationDidChange:(NSNotification *)note
-{
-  if ([self.controller.centerViewController isKindOfClass:[UINavigationController class]]) {
-    UINavigationController *navCon = (UINavigationController *)self.controller.centerViewController;
-    UINavigationBar *bar = navCon.navigationBar;
-
-    // Frame-Update ohne Animation um Konflikte mit Auto Layout zu vermeiden
-    [UIView performWithoutAnimation:^{
-      bar.frame = CGRectMake(0, 0, self.controller.view.bounds.size.width, 64);
-    }];
-  }
 }
 
 - (void)frameSizeChanged:(CGRect)frame bounds:(CGRect)bounds
@@ -307,11 +286,9 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 }
 
 // G11: Cleanup beim Destroy — Callback, Notification Observer und TiViewControllers aus Parent entfernen
+// Direkter Ivar-Zugriff statt Property-Getter, um @synchronized auf freigegebenem Objekt zu vermeiden
 - (void)dealloc
 {
-  // FIX: TiViewControllers aus Parent entfernen (verhindert Blank Screen bei Wiederverwendung)
-  // controller ist CustomMMDrawerController, centerViewController ist der TiViewController
-
   // centerViewController
   if (controller.centerViewController) {
     UIViewController *centerVC = controller.centerViewController;
@@ -341,10 +318,6 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       }
     }
   }
-
-  [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                   name:UIApplicationDidChangeStatusBarOrientationNotification
-                                                 object:nil];
 
   if (controller) {
     [controller clearWindowAppearanceCallback];
@@ -484,22 +457,19 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
 - (UIStatusBarStyle)preferredStatusBarStyle
 {
-  return [controller preferredStatusBarStyle];
-}
-
-- (UIViewController *)childViewControllerForStatusBarStyle
-{
-  return nil;
+  // Direkter Ivar-Zugriff statt Property-Getter
+  if (controller) {
+    return [controller preferredStatusBarStyle];
+  }
+  return UIStatusBarStyleDefault;
 }
 
 
 - (void)setStatusBarStyle_:(NSNumber *)style
 {
-  ENSURE_UI_THREAD(setStatusBarStyle_, style);    
-    
-    controller.navigationController.navigationBar.barStyle = [style intValue];
-    
-//  [[UIApplication sharedApplication] setStatusBarStyle:[style intValue]];
+  ENSURE_UI_THREAD(setStatusBarStyle_, style);
+  // StatusBar-Style wird über den Proxy gesetzt (siehe DkNappDrawerDrawerProxy)
+  // Hier nichts tun — der Proxy handhabt dies über TiWindowProxy.barStyle
 }
 
 - (void)setAnimationMode_:(id)args
@@ -529,8 +499,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     [controller setDrawerVisualStateBlock:[NappDrawerVisualState fadeVisualStateBlock]];
     break;
   case 100:
-    [controller setDrawerVisualStateBlock:[NappDrawerVisualState noneVisualStateBlock]];
-    break;
+    // fall through
   default:
     [controller setDrawerVisualStateBlock:[NappDrawerVisualState noneVisualStateBlock]];
     break;
@@ -540,28 +509,6 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
 
 #pragma mark - API
-
-
-//-(KrollPromise *)close:(id)args {
-//
-//    if ([self.proxy _hasListeners:@"close"]) {
-//      [self.proxy  fireEvent:@"close"];
-//    }
-//
-//
-////    [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
-////
-////    TiViewProxy *leftWinProxy = [self valueForUndefinedKey:@"leftWindow"];
-////    TiViewProxy *rightWinProxy = [self valueForUndefinedKey:@"rightWindow"];
-////    TiViewProxy *centerWinProxy = [self valueForUndefinedKey:@"centerWindow"];
-////    [leftWinProxy windowDidClose];
-////    [rightWinProxy windowDidClose];
-////    [centerWinProxy windowDidClose];
-////
-////    [controller closeDrawerAnimated:NO completion:^(BOOL finished) {
-////    }];
-//
-//}
 
 - (void)toggleLeftWindow:(id)args
 {
