@@ -40,20 +40,43 @@
   [leftWinProxy windowDidClose];
   [rightWinProxy windowDidClose];
   [centerWinProxy windowDidClose];
- // [(DkNappDrawerDrawer *)[self view] removeFromSuperview];
 
-   
+    DkNappDrawerDrawer *drawerView = (DkNappDrawerDrawer *)[self view];
+    CustomMMDrawerController *ctrl = drawerView.controller;
 
 
     TiThreadPerformOnMainThread(^{
         [self close:nil];
-            if ([self _hasListeners:@"close"]) {
-              [self fireEvent:@"close"];
-            }
+
+        // FIX: Remove the CustomMMDrawerController from parent hierarchy to prevent blank screen on reopen
+        if (ctrl && ctrl.parentViewController) {
+            [ctrl willMoveToParentViewController:nil];
+            [ctrl removeFromParentViewController];
+        }
+
+        // Also remove child TiViewControllers (center, left, right) from parent
+        if (ctrl.centerViewController && ctrl.centerViewController.parentViewController) {
+            [ctrl.centerViewController willMoveToParentViewController:nil];
+            [ctrl.centerViewController removeFromParentViewController];
+        }
+        if (ctrl.leftDrawerViewController && ctrl.leftDrawerViewController.parentViewController) {
+            [ctrl.leftDrawerViewController willMoveToParentViewController:nil];
+            [ctrl.leftDrawerViewController removeFromParentViewController];
+        }
+        if (ctrl.rightDrawerViewController && ctrl.rightDrawerViewController.parentViewController) {
+            [ctrl.rightDrawerViewController willMoveToParentViewController:nil];
+            [ctrl.rightDrawerViewController removeFromParentViewController];
+        }
+
+        // Remove the drawer view itself from superview
+        [drawerView removeFromSuperview];
+
+        if ([self _hasListeners:@"close"]) {
+          [self fireEvent:@"close"];
+        }
     },
     YES);
- // [super windowDidClose];
-    
+
 }
 
 - (CustomMMDrawerController *)_controller
