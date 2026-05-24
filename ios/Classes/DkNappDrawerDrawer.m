@@ -98,11 +98,14 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
 #pragma mark - Init
 
-// G1: dispatch_once für thread-sichere lazy init
+// G1: Per-Instance thread-sichere lazy init (dispatch_once war prozessweit — verhindert Neuerstellung bei neuer Instanz)
 - (MMDrawerController *)controller
 {
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
+  @synchronized(self) {
+    if (controller != nil) {
+      return controller;
+    }
+    NSLog(@"[NappDrawer] controller lazy init START — self: %p", self);
     // G2: isKindOfClass: statt String-Vergleich (TiUINavigationWindowProxy)
     TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
     BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
@@ -250,16 +253,26 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       [self setStatusBarStyle_:[self.proxy valueForUndefinedKey:@"statusBarStyle"]];
     }
 
-    [controller willMoveToParentViewController:TiApp.controller.topPresentedController];
+    UIViewController *topCtrl = TiApp.controller.topPresentedController;
+    NSLog(@"[NappDrawer] Adding controller to topPresentedController: %@ (%p)", NSStringFromClass([topCtrl class]), topCtrl);
+
+    [controller willMoveToParentViewController:topCtrl];
 
     // set frame bounds & add it
     controllerView_ = [controller view];
     [controllerView_ setFrame:[self bounds]];
+    NSLog(@"[NappDrawer] Adding drawerView to self (%p), superview: %@", self, self.superview ? NSStringFromClass([self.superview class]) : @"nil");
+
+    // Check if self is already in a window
+    NSLog(@"[NappDrawer] self.window: %@ (frame: %@)", self.window ? @"YES" : @"NO", NSStringFromCGRect(self.frame));
+
     [self addSubview:controllerView_];
 
-    [TiApp.controller.topPresentedController addChildViewController:controller];
+    [topCtrl addChildViewController:controller];
     // G3: didMoveToParentViewController: nach addChildViewController:
-    [controller didMoveToParentViewController:TiApp.controller.topPresentedController];
+    [controller didMoveToParentViewController:topCtrl];
+
+    NSLog(@"[NappDrawer] Controller added. Parent now has %lu children", (unsigned long)topCtrl.childViewControllers.count);
 
     leftView_ = leftWindow.view;
     rightView_ = rightWindow.view;
@@ -269,7 +282,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
                                              selector:@selector(orientationDidChange:)
                                                  name:UIApplicationDidChangeStatusBarOrientationNotification
                                                object:nil];
-  }); // end dispatch_once
+  } // end @synchronized
   return controller;
 }
 
