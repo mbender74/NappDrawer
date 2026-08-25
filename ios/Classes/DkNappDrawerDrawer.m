@@ -213,6 +213,32 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       [strongSelf _fireStateEventForCurrentState];
     }];
 
+    [controller setSlidingCallback:^(CGFloat progress, MMDrawerSide drawerSide) {
+      __typeof__(self) strongSelf = weakSelf;
+
+      if (!strongSelf) {
+        return;
+      }
+
+      if (![[strongSelf proxy] _hasListeners:@"sliding"]) {
+        return;
+      }
+
+      NSString *side = @"none";
+
+      if (drawerSide == MMDrawerSideLeft) {
+        side = @"left";
+      } else if (drawerSide == MMDrawerSideRight) {
+        side = @"right";
+      }
+
+      [[strongSelf proxy] fireEvent:@"sliding"
+                         withObject:@{
+                           @"progress": @(progress),
+                           @"side": side
+                         }];
+    }];
+
     // SET PROPERTIES at init
     if ([self.proxy valueForUndefinedKey:@"openDrawerGestureMode"] != nil) {
       [self setOpenDrawerGestureMode_:[self.proxy valueForUndefinedKey:@"openDrawerGestureMode"]];
@@ -321,6 +347,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
   if (controller) {
     [controller clearWindowAppearanceCallback];
+    [controller clearSlidingCallback];
   }
 }
 
