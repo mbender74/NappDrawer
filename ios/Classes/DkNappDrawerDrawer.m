@@ -39,6 +39,13 @@ UIViewController *ControllerForViewProxy(TiViewProxy *proxy)
   return [[TiViewController alloc] initWithViewProxy:proxy];
 }
 
+// TiUINavigationWindowProxy viene compilata dallo SDK solo se l'app usa Ti.UI.NavigationWindow: cercarla a runtime evita "Undefined symbols" al link
+static BOOL IsNavigationWindowProxy(id obj)
+{
+  Class navClass = NSClassFromString(@"TiUINavigationWindowProxy");
+  return navClass != Nil && [obj isKindOfClass:navClass];
+}
+
 UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowProxy *proxy)
 {
   return [proxy controller];
@@ -107,7 +114,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
     }
     // G2: isKindOfClass: statt String-Vergleich (TiUINavigationWindowProxy)
     TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
-    BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
+    BOOL useNavController = IsNavigationWindowProxy(centerProxy);
 
     // navController or TiWindow ?
     UIViewController *centerWindow = useNavController ? NavigationControllerForViewProxy(centerProxy) : ControllerForViewProxy(centerProxy);
@@ -118,7 +125,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
     if (leftWindow != nil) {
 
-      BOOL leftIsNav = [leftWindow isKindOfClass:[TiUINavigationWindowProxy class]];
+      BOOL leftIsNav = IsNavigationWindowProxy(leftWindow);
       UIViewController *leftController = leftIsNav
         ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)leftWindow)
         : ControllerForViewProxy(leftWindow);
@@ -126,7 +133,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       //both left and right
       if (rightWindow != nil) {
 
-        BOOL rightIsNav = [rightWindow isKindOfClass:[TiUINavigationWindowProxy class]];
+        BOOL rightIsNav = IsNavigationWindowProxy(rightWindow);
         UIViewController *rightController = rightIsNav
           ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)rightWindow)
           : ControllerForViewProxy(rightWindow);
@@ -169,7 +176,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
       //right only
     } else if (rightWindow != nil) {
 
-      BOOL rightIsNav = [rightWindow isKindOfClass:[TiUINavigationWindowProxy class]];
+      BOOL rightIsNav = IsNavigationWindowProxy(rightWindow);
       UIViewController *rightController = rightIsNav
         ? NavigationControllerForViewProxy((TiUINavigationWindowProxy *)rightWindow)
         : ControllerForViewProxy(rightWindow);
@@ -359,7 +366,7 @@ UINavigationController *NavigationControllerForViewProxy(TiUINavigationWindowPro
 
   // G2: isKindOfClass: statt String-Vergleich
   TiUINavigationWindowProxy *centerProxy = [self.proxy valueForUndefinedKey:@"centerWindow"];
-  BOOL useNavController = [centerProxy isKindOfClass:[TiUINavigationWindowProxy class]];
+  BOOL useNavController = IsNavigationWindowProxy(centerProxy);
   UIViewController *centerWindow = useNavController
     ? NavigationControllerForViewProxy(centerProxy)
     : ControllerForViewProxy(centerProxy);
